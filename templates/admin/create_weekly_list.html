@@ -1,0 +1,235 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Nova Lista Semanal - Administração{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Nova Lista Semanal</h2>
+    <a href="{{ url_for('admin_weekly_lists') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Voltar
+    </a>
+</div>
+
+<form method="POST" id="weekly-list-form">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-apple-alt text-success"></i>
+                        Selecionar Produtos
+                    </h5>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                            Selecionar Todos
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                            Desmarcar Todos
+                        </button>
+                        {% if previous_products %}
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="selectPrevious()">
+                            Duplicar Lista Anterior
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% for category, products in products_by_category.items() %}
+                    <div class="category-section mb-4">
+                        <h6 class="category-title">
+                            {{ category.emoji }} {{ category.name }}
+                        </h6>
+                        
+                        <div class="row">
+                            {% for product in products %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <div class="form-check product-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="products" value="{{ product.id }}" 
+                                           id="product-{{ product.id }}"
+                                           {% if product.id in previous_products %}checked{% endif %}>
+                                    <label class="form-check-label" for="product-{{ product.id }}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>
+                                                {% if product.is_organic %}🌱{% endif %}
+                                                {{ product.name }}
+                                            </span>
+                                            <small class="text-muted">
+                                                R$ {{ "%.2f"|format(product.price) }}/{{ product.unit }}
+                                            </small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-week text-success"></i>
+                        Configurações da Lista
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="week_start" class="form-label">Data de Início *</label>
+                        <input type="date" class="form-control" id="week_start" name="week_start" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="week_end" class="form-label">Data de Fim *</label>
+                        <input type="date" class="form-control" id="week_end" name="week_end" required>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Importante:</strong> Ao criar esta lista, ela se tornará automaticamente a lista ativa da semana.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Produtos Selecionados:</strong>
+                        <span id="selected-count" class="badge bg-success">0</span>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Criar Lista Semanal
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        Dicas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Selecione apenas produtos disponíveis
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Verifique os preços antes de publicar
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success"></i>
+                            Use "Duplicar Lista Anterior" para agilizar
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const previousProducts = {{ previous_products|tojson }};
+
+function updateSelectedCount() {
+    const checked = document.querySelectorAll('input[name="products"]:checked').length;
+    document.getElementById('selected-count').textContent = checked;
+}
+
+function selectAll() {
+    document.querySelectorAll('input[name="products"]').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    updateSelectedCount();
+}
+
+function deselectAll() {
+    document.querySelectorAll('input[name="products"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    updateSelectedCount();
+}
+
+function selectPrevious() {
+    document.querySelectorAll('input[name="products"]').forEach(checkbox => {
+        checkbox.checked = previousProducts.includes(parseInt(checkbox.value));
+    });
+    updateSelectedCount();
+}
+
+// Configurar datas padrão (próxima semana)
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + (1 + 7 - today.getDay()) % 7);
+    
+    const nextSunday = new Date(nextMonday);
+    nextSunday.setDate(nextMonday.getDate() + 6);
+    
+    document.getElementById('week_start').value = nextMonday.toISOString().split('T')[0];
+    document.getElementById('week_end').value = nextSunday.toISOString().split('T')[0];
+    
+    // Atualizar contador inicial
+    updateSelectedCount();
+    
+    // Adicionar listeners para checkboxes
+    document.querySelectorAll('input[name="products"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+});
+
+// Validação do formulário
+document.getElementById('weekly-list-form').addEventListener('submit', function(e) {
+    const selectedProducts = document.querySelectorAll('input[name="products"]:checked').length;
+    
+    if (selectedProducts === 0) {
+        e.preventDefault();
+        alert('Por favor, selecione pelo menos um produto para a lista.');
+        return false;
+    }
+    
+    const startDate = new Date(document.getElementById('week_start').value);
+    const endDate = new Date(document.getElementById('week_end').value);
+    
+    if (startDate >= endDate) {
+        e.preventDefault();
+        alert('A data de fim deve ser posterior à data de início.');
+        return false;
+    }
+});
+</script>
+
+<style>
+.category-title {
+    color: #28a745;
+    font-weight: bold;
+    border-bottom: 2px solid #28a745;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.product-check {
+    background: #f8f9fa;
+    border-radius: 5px;
+    padding: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.product-check:hover {
+    background: #e9ecef;
+}
+
+.product-check input:checked + label {
+    color: #28a745;
+    font-weight: bold;
+}
+</style>
+{% endblock %}

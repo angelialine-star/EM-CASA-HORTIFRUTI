@@ -1,0 +1,217 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard - Administração{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Dashboard</h2>
+    <div class="text-muted">
+        <i class="fas fa-clock"></i>
+        {{ moment().format('DD/MM/YYYY HH:mm') }}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stats-card">
+            <span class="stats-number">{{ total_products }}</span>
+            <div class="stats-label">Produtos Ativos</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card">
+            <span class="stats-number">{{ recent_orders|length }}</span>
+            <div class="stats-label">Pedidos Hoje</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card">
+            <span class="stats-number">{{ total_orders }}</span>
+            <div class="stats-label">Total de Pedidos</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card">
+            <span class="stats-number">
+                {% if active_list %}
+                    {% if active_list.is_closed %}
+                        <i class="fas fa-times-circle"></i>
+                    {% else %}
+                        <i class="fas fa-check-circle"></i>
+                    {% endif %}
+                {% else %}
+                    <i class="fas fa-minus-circle"></i>
+                {% endif %}
+            </span>
+            <div class="stats-label">Status da Lista</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-shopping-cart text-success"></i>
+                    Pedidos Recentes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Total</th>
+                                    <th>Data/Hora</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ order.customer_name }}</strong>
+                                        {% if order.customer_phone %}
+                                            <br><small class="text-muted">{{ order.customer_phone }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-success">
+                                            R$ {{ "%.2f"|format(order.total_amount) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small>{{ order.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin_order_detail', order_id=order.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>Nenhum pedido recente</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-week text-success"></i>
+                    Lista Atual
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_list %}
+                    <div class="text-center">
+                        {% if active_list.is_closed %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-times-circle"></i>
+                                <strong>Lista Encerrada</strong>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                <strong>Lista Ativa</strong>
+                            </div>
+                        {% endif %}
+                        
+                        <p class="mb-3">
+                            <strong>Período:</strong><br>
+                            {{ active_list.week_start.strftime('%d/%m') }} a 
+                            {{ active_list.week_end.strftime('%d/%m/%Y') }}
+                        </p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('admin_weekly_list_detail', list_id=active_list.id) }}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-eye"></i> Ver Detalhes
+                            </a>
+                            
+                            {% if not active_list.is_closed %}
+                                <button class="btn btn-warning" onclick="closeWeeklyList({{ active_list.id }})">
+                                    <i class="fas fa-times"></i> Encerrar Pedidos
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-calendar-plus fa-3x mb-3"></i>
+                        <p>Nenhuma lista ativa</p>
+                        <a href="{{ url_for('admin_create_weekly_list') }}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Criar Lista
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools text-success"></i>
+                    Ações Rápidas
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_add_product') }}" class="btn btn-outline-success">
+                        <i class="fas fa-plus"></i> Novo Produto
+                    </a>
+                    <a href="{{ url_for('admin_create_weekly_list') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-calendar-plus"></i> Nova Lista Semanal
+                    </a>
+                    <a href="{{ url_for('admin_reports') }}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar"></i> Ver Relatórios
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function closeWeeklyList(listId) {
+    if (confirm('Tem certeza que deseja encerrar os pedidos desta semana? Esta ação não pode ser desfeita.')) {
+        fetch(`/admin/weekly-lists/${listId}/close`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao encerrar lista: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao encerrar lista');
+        });
+    }
+}
+</script>
+{% endblock %}

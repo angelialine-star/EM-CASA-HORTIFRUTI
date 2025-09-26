@@ -1,0 +1,290 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Relatórios - Administração{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Relatórios</h2>
+    <div>
+        <button class="btn btn-outline-success" onclick="exportReport()">
+            <i class="fas fa-download"></i> Exportar
+        </button>
+    </div>
+</div>
+
+{% if weekly_report %}
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="stats-card">
+            <span class="stats-number">{{ weekly_report.total_orders }}</span>
+            <div class="stats-label">Pedidos da Semana</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card">
+            <span class="stats-number">R$ {{ "%.0f"|format(weekly_report.total_revenue) }}</span>
+            <div class="stats-label">Receita da Semana</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card">
+            <span class="stats-number">{{ weekly_report.product_sales|length }}</span>
+            <div class="stats-label">Produtos Vendidos</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card">
+            <span class="stats-number">
+                {% if weekly_report.total_orders > 0 %}
+                    R$ {{ "%.0f"|format(weekly_report.total_revenue / weekly_report.total_orders) }}
+                {% else %}
+                    R$ 0
+                {% endif %}
+            </span>
+            <div class="stats-label">Ticket Médio</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar text-success"></i>
+                    Produtos Mais Vendidos
+                    <small class="text-muted">
+                        ({{ weekly_report.list.week_start.strftime('%d/%m') }} a 
+                        {{ weekly_report.list.week_end.strftime('%d/%m/%Y') }})
+                    </small>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if weekly_report.product_sales %}
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="products-report">
+                            <thead>
+                                <tr>
+                                    <th>Produto</th>
+                                    <th>Quantidade</th>
+                                    <th>Receita</th>
+                                    <th>% do Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in weekly_report.product_sales %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ product.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">
+                                            {{ product.total_quantity }} {{ product.unit }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-success">
+                                            R$ {{ "%.2f"|format(product.total_revenue) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" 
+                                                 style="width: {{ (product.total_revenue / weekly_report.total_revenue * 100)|round(1) }}%">
+                                                {{ (product.total_revenue / weekly_report.total_revenue * 100)|round(1) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                        <p>Nenhuma venda registrada ainda</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle text-success"></i>
+                    Resumo da Lista
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Período:</strong><br>
+                    {{ weekly_report.list.week_start.strftime('%d/%m/%Y') }} a 
+                    {{ weekly_report.list.week_end.strftime('%d/%m/%Y') }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Status:</strong><br>
+                    {% if weekly_report.list.is_closed %}
+                        <span class="badge bg-warning">Encerrada</span>
+                    {% else %}
+                        <span class="badge bg-success">Ativa</span>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Total de Produtos na Lista:</strong><br>
+                    {{ weekly_report.list.products|length }} produtos
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Produtos com Vendas:</strong><br>
+                    {{ weekly_report.product_sales|length }} produtos
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <a href="{{ url_for('admin_weekly_list_detail', list_id=weekly_report.list.id) }}" 
+                       class="btn btn-outline-primary w-100">
+                        <i class="fas fa-eye"></i> Ver Lista Completa
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-tools text-success"></i>
+                    Ações
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if not weekly_report.list.is_closed %}
+                        <button class="btn btn-warning" onclick="closeWeeklyList({{ weekly_report.list.id }})">
+                            <i class="fas fa-times"></i> Encerrar Pedidos
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('admin_orders') }}" class="btn btn-outline-info">
+                        <i class="fas fa-list"></i> Ver Todos os Pedidos
+                    </a>
+                    
+                    <button class="btn btn-outline-success" onclick="generateShoppingList()">
+                        <i class="fas fa-shopping-list"></i> Lista de Compras
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="text-center py-5">
+    <div class="mb-4">
+        <i class="fas fa-chart-line text-muted" style="font-size: 4rem;"></i>
+    </div>
+    
+    <h3 class="text-muted mb-3">Nenhuma lista ativa</h3>
+    
+    <p class="lead text-muted mb-4">
+        Crie uma lista semanal para começar a receber pedidos e gerar relatórios.
+    </p>
+    
+    <a href="{{ url_for('admin_create_weekly_list') }}" class="btn btn-success btn-lg">
+        <i class="fas fa-plus"></i> Criar Lista Semanal
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function closeWeeklyList(listId) {
+    if (confirm('Tem certeza que deseja encerrar os pedidos desta semana? Esta ação não pode ser desfeita.')) {
+        fetch(`/admin/weekly-lists/${listId}/close`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao encerrar lista: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao encerrar lista');
+        });
+    }
+}
+
+function exportReport() {
+    // Criar conteúdo do relatório em texto
+    let reportContent = '🍃 EM CASA - RELATÓRIO SEMANAL 🍃\n\n';
+    
+    {% if weekly_report %}
+    reportContent += 'PERÍODO: {{ weekly_report.list.week_start.strftime("%d/%m/%Y") }} a {{ weekly_report.list.week_end.strftime("%d/%m/%Y") }}\n\n';
+    reportContent += 'RESUMO:\n';
+    reportContent += '• Total de Pedidos: {{ weekly_report.total_orders }}\n';
+    reportContent += '• Receita Total: R$ {{ "%.2f"|format(weekly_report.total_revenue) }}\n';
+    reportContent += '• Produtos Vendidos: {{ weekly_report.product_sales|length }}\n';
+    reportContent += '• Ticket Médio: R$ {{ "%.2f"|format(weekly_report.total_revenue / weekly_report.total_orders if weekly_report.total_orders > 0 else 0) }}\n\n';
+    
+    reportContent += 'PRODUTOS MAIS VENDIDOS:\n';
+    {% for product in weekly_report.product_sales %}
+    reportContent += '• {{ product.name }}: {{ product.total_quantity }} {{ product.unit }} - R$ {{ "%.2f"|format(product.total_revenue) }}\n';
+    {% endfor %}
+    {% endif %}
+    
+    // Criar e baixar arquivo
+    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'relatorio-semanal-{{ weekly_report.list.week_start.strftime("%d-%m-%Y") if weekly_report else "sem-data" }}.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function generateShoppingList() {
+    let shoppingList = '🛒 LISTA DE COMPRAS - ORGANIZAÇÃO DAS SACOLAS\n\n';
+    
+    {% if weekly_report and weekly_report.product_sales %}
+    shoppingList += 'PERÍODO: {{ weekly_report.list.week_start.strftime("%d/%m/%Y") }} a {{ weekly_report.list.week_end.strftime("%d/%m/%Y") }}\n\n';
+    shoppingList += 'PRODUTOS NECESSÁRIOS:\n\n';
+    
+    {% for product in weekly_report.product_sales %}
+    shoppingList += '☐ {{ product.name }}: {{ product.total_quantity }} {{ product.unit }}\n';
+    {% endfor %}
+    
+    shoppingList += '\n\nTOTAL DE SACOLAS A PREPARAR: {{ weekly_report.total_orders }}\n';
+    shoppingList += '\nObservação: Verifique se há produtos suficientes em estoque!';
+    {% endif %}
+    
+    // Criar e baixar arquivo
+    const blob = new Blob([shoppingList], { type: 'text/plain;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lista-compras-{{ weekly_report.list.week_start.strftime("%d-%m-%Y") if weekly_report else "sem-data" }}.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

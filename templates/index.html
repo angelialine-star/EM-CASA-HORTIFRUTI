@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Lista da Semana - Em Casa Hortifruti{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="text-center mb-4">
+            <h1 class="display-5 fw-bold text-success">🍃 Lista da Semana</h1>
+            <p class="lead">Produtos agroecológicos frescos e selecionados</p>
+            <p class="text-muted">
+                <i class="fas fa-calendar-alt"></i>
+                Semana de {{ weekly_list.week_start.strftime('%d/%m') }} a {{ weekly_list.week_end.strftime('%d/%m/%Y') }}
+            </p>
+        </div>
+
+        {% for category, products in products_by_category.items() %}
+        <div class="category-header fade-in">
+            {{ category.emoji }} {{ category.name }}
+        </div>
+        
+        <div class="row">
+            {% for product in products %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card product-card fade-in">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="product-name mb-1">{{ product.name }}</h6>
+                            {% if product.is_organic %}
+                                <span class="organic-badge">🌱</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="product-price">R$ {{ "%.2f"|format(product.price) }}</span>
+                            <small class="text-muted">{{ product.unit }}</small>
+                        </div>
+                        
+                        <div class="quantity-controls">
+                            <button type="button" class="quantity-btn" onclick="decreaseQuantity({{ product.id }})">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <input type="number" 
+                                   id="qty-{{ product.id }}" 
+                                   class="quantity-input" 
+                                   value="0" 
+                                   min="0" 
+                                   step="0.5"
+                                   onchange="updateCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.unit }}')">
+                            <button type="button" class="quantity-btn" onclick="increaseQuantity({{ product.id }})">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="cart-summary">
+            <h4 class="text-center mb-3">
+                <i class="fas fa-shopping-cart text-success"></i>
+                Seu Pedido
+            </h4>
+            
+            <div id="cart-items">
+                <p class="text-muted text-center">Nenhum item selecionado</p>
+            </div>
+            
+            <div id="cart-total" class="cart-total" style="display: none;">
+                <div class="d-flex justify-content-between">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">R$ 0,00</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Taxa de entrega:</span>
+                    <span id="delivery-fee">R$ 0,00</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <strong>Total:</strong>
+                    <strong id="total">R$ 0,00</strong>
+                </div>
+            </div>
+            
+            <div id="checkout-section" style="display: none;">
+                <hr>
+                <form id="checkout-form">
+                    <div class="mb-3">
+                        <label for="customer-name" class="form-label">Seu nome *</label>
+                        <input type="text" class="form-control" id="customer-name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="customer-phone" class="form-label">Telefone (opcional)</label>
+                        <input type="tel" class="form-control" id="customer-phone" placeholder="(82) 99999-9999">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="delivery-address" class="form-label">Endereço de entrega</label>
+                        <textarea class="form-control" id="delivery-address" rows="3" 
+                                placeholder="Rua, número, bairro, cidade"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="needs-delivery" onchange="toggleDeliveryFee()">
+                            <label class="form-check-label" for="needs-delivery">
+                                Preciso de entrega (R$ 10,00 - Maceió e Paripueira)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-whatsapp w-100" onclick="sendWhatsAppOrder()">
+                        <i class="fab fa-whatsapp"></i>
+                        Enviar Pedido via WhatsApp
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let cart = {};
+let deliveryFee = 0;
+
+function increaseQuantity(productId) {
+    const input = document.getElementById(`qty-${productId}`);
+    const currentValue = parseFloat(input.value) || 0;
+    input.value = (currentValue + 0.5).toFixed(1);
+    input.dispatchEvent(new Event('change'));
+}
+
+function decreaseQuantity(productId) {
+    const input = document.getElementById(`qty-${productId}`);
+    const currentValue = parseFloat(input.value) || 0;
+    if (currentValue > 0) {
+        input.value = Math.max(0, currentValue - 0.5).toFixed(1);
+        input.dispatchEvent(new Event('change'));
+    }
+}
+
+function updateCart(productId, productName, price, unit) {
+    const quantity = parseFloat(document.getElementById(`qty-${productId}`).value) || 0;
+    
+    if (quantity > 0) {
+        cart[productId] = {
+            name: productName,
+            price: price,
+            unit: unit,
+            quantity: quantity,
+            total: price * quantity
+        };
+    } else {
+        delete cart[productId];
+    }
+    
+    renderCart();
+}
+
+function renderCart() {
+    const cartItems = document.getElementById('cart-items');
+    const cartTotal = document.getElementById('cart-total');
+    const checkoutSection = document.getElementById('checkout-section');
+    
+    if (Object.keys(cart).length === 0) {
+        cartItems.innerHTML = '<p class="text-muted text-center">Nenhum item selecionado</p>';
+        cartTotal.style.display = 'none';
+        checkoutSection.style.display = 'none';
+        return;
+    }
+    
+    let html = '';
+    let subtotal = 0;
+    
+    for (const [productId, item] of Object.entries(cart)) {
+        html += `
+            <div class="cart-item">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold">${item.name}</span>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${productId})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="d-flex justify-content-between text-muted">
+                    <span>${item.quantity} ${item.unit}</span>
+                    <span>R$ ${item.total.toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+        subtotal += item.total;
+    }
+    
+    cartItems.innerHTML = html;
+    
+    document.getElementById('subtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
+    document.getElementById('delivery-fee').textContent = `R$ ${deliveryFee.toFixed(2)}`;
+    document.getElementById('total').textContent = `R$ ${(subtotal + deliveryFee).toFixed(2)}`;
+    
+    cartTotal.style.display = 'block';
+    checkoutSection.style.display = 'block';
+}
+
+function removeFromCart(productId) {
+    delete cart[productId];
+    document.getElementById(`qty-${productId}`).value = 0;
+    renderCart();
+}
+
+function toggleDeliveryFee() {
+    const needsDelivery = document.getElementById('needs-delivery').checked;
+    deliveryFee = needsDelivery ? 10.00 : 0;
+    renderCart();
+}
+
+function sendWhatsAppOrder() {
+    const customerName = document.getElementById('customer-name').value.trim();
+    const customerPhone = document.getElementById('customer-phone').value.trim();
+    const deliveryAddress = document.getElementById('delivery-address').value.trim();
+    
+    if (!customerName) {
+        alert('Por favor, informe seu nome.');
+        return;
+    }
+    
+    if (Object.keys(cart).length === 0) {
+        alert('Por favor, selecione pelo menos um produto.');
+        return;
+    }
+    
+    // Montar mensagem do WhatsApp
+    let message = `🍃 *PEDIDO - EM CASA HORTIFRUTI* 🍃\n\n`;
+    message += `👤 *Cliente:* ${customerName}\n`;
+    
+    if (customerPhone) {
+        message += `📱 *Telefone:* ${customerPhone}\n`;
+    }
+    
+    if (deliveryAddress) {
+        message += `📍 *Endereço:* ${deliveryAddress}\n`;
+    }
+    
+    message += `\n📋 *PRODUTOS:*\n`;
+    
+    let subtotal = 0;
+    for (const [productId, item] of Object.entries(cart)) {
+        message += `• ${item.name} - ${item.quantity} ${item.unit} - R$ ${item.total.toFixed(2)}\n`;
+        subtotal += item.total;
+    }
+    
+    message += `\n💰 *VALORES:*\n`;
+    message += `Subtotal: R$ ${subtotal.toFixed(2)}\n`;
+    
+    if (deliveryFee > 0) {
+        message += `Taxa de entrega: R$ ${deliveryFee.toFixed(2)}\n`;
+    }
+    
+    message += `*TOTAL: R$ ${(subtotal + deliveryFee).toFixed(2)}*\n\n`;
+    message += `Obrigado(a) pela preferência! 🌱`;
+    
+    // Número do WhatsApp do Mario
+    const whatsappNumber = '5582996603943';
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    
+    // Salvar pedido no banco de dados (opcional - via AJAX)
+    saveOrder(customerName, customerPhone, deliveryAddress, subtotal, deliveryFee);
+    
+    // Abrir WhatsApp
+    window.open(whatsappUrl, '_blank');
+}
+
+function saveOrder(customerName, customerPhone, deliveryAddress, subtotal, deliveryFee) {
+    const orderData = {
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        delivery_address: deliveryAddress,
+        delivery_fee: deliveryFee,
+        total_amount: subtotal + deliveryFee,
+        items: cart
+    };
+    
+    fetch('/api/save-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Pedido salvo com sucesso!');
+        }
+    })
+    .catch(error => {
+        console.error('Erro ao salvar pedido:', error);
+    });
+}
+
+// Adicionar animações aos cards
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.product-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('fade-in');
+        }, index * 50);
+    });
+});
+</script>
+{% endblock %}

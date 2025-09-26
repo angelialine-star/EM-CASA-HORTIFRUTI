@@ -1,0 +1,236 @@
+/* Estilos gerais */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+}
+
+/* Cards de produtos */
+.product-card {
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 1rem;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.product-name {
+    font-weight: 600;
+    color: #2d5a27;
+}
+
+.product-price {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.organic-badge {
+    background-color: #28a745;
+    color: white;
+    font-size: 0.8rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+/* Categorias */
+.category-header {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    margin: 2rem 0 1rem 0;
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+/* Carrinho de compras */
+.cart-summary {
+    position: sticky;
+    top: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+}
+
+.cart-item {
+    border-bottom: 1px solid #eee;
+    padding: 0.5rem 0;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+}
+
+.cart-total {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #28a745;
+    border-top: 2px solid #28a745;
+    padding-top: 1rem;
+    margin-top: 1rem;
+}
+
+/* Botões */
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+}
+
+.btn-whatsapp {
+    background-color: #25d366;
+    border-color: #25d366;
+    color: white;
+    font-weight: bold;
+}
+
+.btn-whatsapp:hover {
+    background-color: #128c7e;
+    border-color: #128c7e;
+    color: white;
+}
+
+/* Controles de quantidade */
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quantity-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: 2px solid #28a745;
+    background: white;
+    color: #28a745;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quantity-btn:hover {
+    background: #28a745;
+    color: white;
+}
+
+.quantity-input {
+    width: 60px;
+    text-align: center;
+    border: 2px solid #28a745;
+    border-radius: 5px;
+    padding: 0.25rem;
+}
+
+/* Formulário de checkout */
+.checkout-form {
+    background: white;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    margin-top: 2rem;
+}
+
+/* Admin styles */
+.admin-sidebar {
+    background-color: #2d5a27;
+    min-height: calc(100vh - 76px);
+    padding: 2rem 1rem;
+}
+
+.admin-sidebar .nav-link {
+    color: #fff;
+    padding: 0.75rem 1rem;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.admin-sidebar .nav-link:hover,
+.admin-sidebar .nav-link.active {
+    background-color: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.admin-content {
+    padding: 2rem;
+}
+
+.stats-card {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.stats-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    display: block;
+}
+
+.stats-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .cart-summary {
+        position: static;
+        margin-top: 2rem;
+    }
+    
+    .quantity-controls {
+        justify-content: center;
+    }
+    
+    .admin-sidebar {
+        min-height: auto;
+        padding: 1rem;
+    }
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Loading spinner */
+.spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #28a745;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
