@@ -150,35 +150,148 @@ def is_admin_logged_in():
 def get_base_style():
     return """
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; margin-bottom: 30px; }
-        .btn { padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; margin: 5px; display: inline-block; }
-        .btn:hover { background: #218838; }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 10px; background: #f8f9fa; line-height: 1.4; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+        .header { text-align: center; margin-bottom: 25px; }
+        .header h1 { margin: 0 0 10px 0; font-size: 1.8em; color: #2d5016; }
+        .header p { margin: 5px 0; color: #666; }
+        
+        /* Botões */
+        .btn { padding: 12px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; border: none; cursor: pointer; margin: 5px; display: inline-block; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .btn:hover { background: #218838; transform: translateY(-1px); }
         .btn-danger { background: #dc3545; }
         .btn-danger:hover { background: #c82333; }
         .btn-warning { background: #ffc107; color: #212529; }
         .btn-warning:hover { background: #e0a800; }
+        .btn-sm { padding: 8px 12px; font-size: 12px; }
+        
+        /* Formulários */
         .form-group { margin-bottom: 15px; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .form-control { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; transition: border-color 0.2s; }
+        .form-control:focus { border-color: #28a745; outline: none; }
+        
+        /* Alertas */
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 8px; }
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .product-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white; }
-        .category-header { background: #007bff; color: white; padding: 10px; margin: 20px 0 10px 0; border-radius: 5px; }
-        .cart { position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 300px; }
-        .quantity-input { width: 60px; text-align: center; }
+        
+        /* Grid de produtos - MOBILE FIRST */
+        .products-container { margin-bottom: 120px; }
+        .category-section { margin-bottom: 30px; }
+        .category-header { background: linear-gradient(135deg, #28a745, #20c997); color: white; padding: 15px; margin: 0 0 15px 0; border-radius: 10px; text-align: center; }
+        .category-header h3 { margin: 0; font-size: 1.3em; }
+        
+        .product-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        @media (min-width: 768px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        .product-card { 
+            border: 2px solid #e9ecef; 
+            padding: 20px; 
+            border-radius: 12px; 
+            background: white; 
+            transition: all 0.2s;
+            position: relative;
+        }
+        .product-card:hover { border-color: #28a745; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1); }
+        
+        .product-name { font-size: 1.1em; font-weight: 600; margin: 0 0 8px 0; color: #2d5016; }
+        .product-price { font-size: 1.3em; font-weight: 700; color: #28a745; margin: 0 0 5px 0; }
+        .product-unit { color: #666; font-size: 0.9em; margin: 0 0 15px 0; }
+        .organic-badge { background: #28a745; color: white; padding: 4px 8px; border-radius: 20px; font-size: 0.8em; font-weight: 500; }
+        
+        /* Controles de quantidade - MOBILE OTIMIZADO */
+        .quantity-controls { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 15px; 
+            margin-top: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .qty-btn { 
+            width: 45px; 
+            height: 45px; 
+            border: none; 
+            border-radius: 50%; 
+            background: #28a745; 
+            color: white; 
+            font-size: 20px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .qty-btn:hover { background: #218838; transform: scale(1.1); }
+        .qty-btn:disabled { background: #6c757d; cursor: not-allowed; transform: none; }
+        .qty-display { 
+            font-size: 1.2em; 
+            font-weight: 600; 
+            min-width: 60px; 
+            text-align: center; 
+            padding: 8px 12px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+        }
+        
+        /* Carrinho fixo - REPOSICIONADO */
+        .cart-summary { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: linear-gradient(135deg, #28a745, #20c997); 
+            color: white; 
+            padding: 15px; 
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            display: none;
+        }
+        .cart-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .cart-info { flex: 1; }
+        .cart-total { font-size: 1.2em; font-weight: 700; }
+        .cart-items-count { font-size: 0.9em; opacity: 0.9; }
+        
+        /* Checkout */
+        .checkout-section { 
+            margin-top: 30px; 
+            padding: 25px; 
+            border: 3px solid #28a745; 
+            border-radius: 15px; 
+            background: #f8fff9;
+            display: none;
+        }
+        .checkout-title { color: #2d5016; margin: 0 0 20px 0; text-align: center; }
+        
+        /* Tabelas admin */
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; }
-        .nav { background: #343a40; padding: 10px 0; margin-bottom: 20px; }
-        .nav a { color: white; text-decoration: none; padding: 10px 15px; margin: 0 5px; }
-        .nav a:hover { background: #495057; border-radius: 5px; }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        
+        /* Navegação admin */
+        .nav { background: #343a40; padding: 10px 0; margin-bottom: 20px; border-radius: 8px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 15px; margin: 0 5px; border-radius: 5px; }
+        .nav a:hover { background: #495057; }
+        
+        /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: white; margin: 15% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 500px; }
+        .modal-content { background-color: white; margin: 5% auto; padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; }
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close:hover { color: black; }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container { padding: 10px; margin: 5px; }
+            .header h1 { font-size: 1.5em; }
+            .cart-content { flex-direction: column; text-align: center; }
+            .btn { padding: 10px 15px; font-size: 13px; }
+        }
     </style>
     """
 
@@ -192,7 +305,11 @@ def index():
         if not active_list:
             return f"""
             <html>
-            <head><title>Em Casa - Hortifruti</title>{get_base_style()}</head>
+            <head>
+                <title>Em Casa - Hortifruti</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                {get_base_style()}
+            </head>
             <body>
                 <div class="container">
                     <div class="header">
@@ -226,23 +343,32 @@ def index():
         for category in sorted_categories:
             products = sorted(products_by_category[category], key=lambda x: x.name)
             
-            products_html += f'<div class="category-header"><h3>{category.emoji} {category.name}</h3></div>'
-            products_html += '<div class="product-grid">'
+            products_html += f"""
+            <div class="category-section">
+                <div class="category-header">
+                    <h3>{category.emoji} {category.name}</h3>
+                </div>
+                <div class="product-grid">
+            """
             
             for product in products:
-                organic_badge = "🌱 ORGÂNICO" if product.is_organic else ""
+                organic_badge = '<span class="organic-badge">🌱 ORGÂNICO</span>' if product.is_organic else ""
                 products_html += f"""
                 <div class="product-card">
-                    <h4>{product.name} {organic_badge}</h4>
-                    <p><strong>R$ {product.price:.2f}</strong> / {product.unit}</p>
-                    <div class="form-group">
-                        <label>Quantidade:</label>
-                        <input type="number" class="quantity-input" id="qty_{product.id}" min="0" step="0.5" value="0" onchange="updateCart({product.id}, '{product.name}', {product.price}, '{product.unit}')">
+                    <div class="product-name">{product.name}</div>
+                    <div class="product-price">R$ {product.price:.2f}</div>
+                    <div class="product-unit">por {product.unit}</div>
+                    {organic_badge}
+                    
+                    <div class="quantity-controls">
+                        <button class="qty-btn" onclick="decreaseQty({product.id})" id="minus_{product.id}">−</button>
+                        <div class="qty-display" id="qty_display_{product.id}">0</div>
+                        <button class="qty-btn" onclick="increaseQty({product.id}, '{product.name}', {product.price}, '{product.unit}')">+</button>
                     </div>
                 </div>
                 """
             
-            products_html += '</div>'
+            products_html += '</div></div>'
         
         return f"""
         <html>
@@ -255,41 +381,54 @@ def index():
             <div class="container">
                 <div class="header">
                     <h1>🍃 Em Casa - Hortifruti Delivery</h1>
-                    <p>Lista da semana: {active_list.week_start.strftime('%d/%m')} a {active_list.week_end.strftime('%d/%m/%Y')}</p>
+                    <p><strong>Lista da semana:</strong> {active_list.week_start.strftime('%d/%m')} a {active_list.week_end.strftime('%d/%m/%Y')}</p>
+                    <p>📱 WhatsApp: <strong>(82) 99660-3943</strong></p>
                 </div>
                 
-                {products_html}
-                
-                <div id="cart" class="cart" style="display: none;">
-                    <h4>🛒 Carrinho</h4>
-                    <div id="cart-items"></div>
-                    <div id="cart-total"></div>
-                    <button class="btn" onclick="showCheckout()">Finalizar Pedido</button>
+                <div class="products-container">
+                    {products_html}
                 </div>
                 
-                <div id="checkout" style="display: none; margin-top: 30px; padding: 20px; border: 2px solid #28a745; border-radius: 10px;">
-                    <h3>📋 Finalizar Pedido</h3>
+                <div id="cart-summary" class="cart-summary">
+                    <div class="cart-content">
+                        <div class="cart-info">
+                            <div class="cart-total" id="cart-total">R$ 0,00</div>
+                            <div class="cart-items-count" id="cart-items-count">0 itens</div>
+                        </div>
+                        <button class="btn" onclick="showCheckout()">Finalizar Pedido</button>
+                    </div>
+                </div>
+                
+                <div id="checkout" class="checkout-section">
+                    <h3 class="checkout-title">📋 Finalizar Pedido</h3>
+                    <div id="checkout-items" style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px;"></div>
+                    
                     <form id="checkout-form">
                         <div class="form-group">
-                            <label>Nome completo:</label>
-                            <input type="text" class="form-control" id="customer_name" required>
+                            <label><strong>Nome completo:</strong> *</label>
+                            <input type="text" class="form-control" id="customer_name" required placeholder="Seu nome completo">
                         </div>
                         <div class="form-group">
-                            <label>Telefone:</label>
-                            <input type="tel" class="form-control" id="customer_phone">
+                            <label><strong>Telefone:</strong></label>
+                            <input type="tel" class="form-control" id="customer_phone" placeholder="(82) 99999-9999 (opcional)">
                         </div>
                         <div class="form-group">
-                            <label>Endereço de entrega:</label>
-                            <textarea class="form-control" id="delivery_address" rows="3" required></textarea>
+                            <label><strong>Endereço de entrega:</strong></label>
+                            <textarea class="form-control" id="delivery_address" rows="3" placeholder="Rua, número, bairro... (opcional para clientes conhecidos)"></textarea>
                         </div>
                         <div class="form-group">
-                            <label>Local de entrega:</label>
+                            <label><strong>Local de entrega:</strong></label>
                             <select class="form-control" id="delivery_location" onchange="updateDeliveryFee()">
                                 <option value="maceio">Maceió (Taxa: R$ 10,00)</option>
                                 <option value="paripueira">Paripueira (Taxa: R$ 10,00)</option>
                             </select>
                         </div>
-                        <button type="button" class="btn" onclick="sendToWhatsApp()">📱 Enviar via WhatsApp</button>
+                        
+                        <div style="text-align: center; margin-top: 25px;">
+                            <button type="button" class="btn" onclick="sendToWhatsApp()" style="font-size: 16px; padding: 15px 30px;">
+                                📱 Enviar Pedido via WhatsApp
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -298,93 +437,137 @@ def index():
                 let cart = {{}};
                 let deliveryFee = 10.00;
                 
-                function updateCart(productId, productName, price, unit) {{
-                    const qty = parseFloat(document.getElementById('qty_' + productId).value) || 0;
-                    
-                    if (qty > 0) {{
+                function increaseQty(productId, productName, price, unit) {{
+                    if (!cart[productId]) {{
                         cart[productId] = {{
                             name: productName,
                             price: price,
                             unit: unit,
-                            quantity: qty,
-                            total: qty * price
+                            quantity: 0
                         }};
-                    }} else {{
-                        delete cart[productId];
                     }}
                     
-                    updateCartDisplay();
+                    cart[productId].quantity += 1;
+                    updateDisplay(productId);
+                    updateCartSummary();
                 }}
                 
-                function updateCartDisplay() {{
-                    const cartDiv = document.getElementById('cart');
-                    const cartItems = document.getElementById('cart-items');
-                    const cartTotal = document.getElementById('cart-total');
-                    
-                    if (Object.keys(cart).length === 0) {{
-                        cartDiv.style.display = 'none';
-                        return;
+                function decreaseQty(productId) {{
+                    if (cart[productId] && cart[productId].quantity > 0) {{
+                        cart[productId].quantity -= 1;
+                        if (cart[productId].quantity === 0) {{
+                            delete cart[productId];
+                        }}
+                        updateDisplay(productId);
+                        updateCartSummary();
                     }}
+                }}
+                
+                function updateDisplay(productId) {{
+                    const qty = cart[productId] ? cart[productId].quantity : 0;
+                    document.getElementById('qty_display_' + productId).textContent = qty;
                     
-                    cartDiv.style.display = 'block';
+                    const minusBtn = document.getElementById('minus_' + productId);
+                    minusBtn.disabled = qty === 0;
+                }}
+                
+                function updateCartSummary() {{
+                    const cartSummary = document.getElementById('cart-summary');
+                    const cartTotal = document.getElementById('cart-total');
+                    const cartItemsCount = document.getElementById('cart-items-count');
                     
-                    let itemsHtml = '';
                     let subtotal = 0;
+                    let itemCount = 0;
                     
                     for (let productId in cart) {{
                         const item = cart[productId];
-                        itemsHtml += `<div>${{item.quantity}} ${{item.unit}} - ${{item.name}} - R$ ${{item.total.toFixed(2)}}</div>`;
-                        subtotal += item.total;
+                        subtotal += item.quantity * item.price;
+                        itemCount += item.quantity;
                     }}
                     
-                    const total = subtotal + deliveryFee;
-                    
-                    cartItems.innerHTML = itemsHtml;
-                    cartTotal.innerHTML = `
-                        <div><strong>Subtotal: R$ ${{subtotal.toFixed(2)}}</strong></div>
-                        <div>Taxa de entrega: R$ ${{deliveryFee.toFixed(2)}}</div>
-                        <div><strong>Total: R$ ${{total.toFixed(2)}}</strong></div>
-                    `;
+                    if (itemCount > 0) {{
+                        const total = subtotal + deliveryFee;
+                        cartTotal.textContent = `R$ ${{total.toFixed(2).replace('.', ',')}}`;
+                        cartItemsCount.textContent = `${{itemCount}} ${{itemCount === 1 ? 'item' : 'itens'}}`;
+                        cartSummary.style.display = 'block';
+                    }} else {{
+                        cartSummary.style.display = 'none';
+                    }}
                 }}
                 
                 function updateDeliveryFee() {{
                     deliveryFee = 10.00;
-                    updateCartDisplay();
+                    updateCartSummary();
                 }}
                 
                 function showCheckout() {{
+                    let checkoutItems = '';
+                    let subtotal = 0;
+                    
+                    for (let productId in cart) {{
+                        const item = cart[productId];
+                        const itemTotal = item.quantity * item.price;
+                        subtotal += itemTotal;
+                        checkoutItems += `
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
+                                <span>${{item.quantity}} ${{item.unit}} - ${{item.name}}</span>
+                                <span><strong>R$ ${{itemTotal.toFixed(2).replace('.', ',')}}</strong></span>
+                            </div>
+                        `;
+                    }}
+                    
+                    const total = subtotal + deliveryFee;
+                    checkoutItems += `
+                        <div style="padding: 10px 0; font-weight: bold;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Subtotal:</span>
+                                <span>R$ ${{subtotal.toFixed(2).replace('.', ',')}}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Taxa de entrega:</span>
+                                <span>R$ ${{deliveryFee.toFixed(2).replace('.', ',')}}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 1.2em; color: #28a745; border-top: 2px solid #28a745; padding-top: 10px; margin-top: 10px;">
+                                <span>TOTAL:</span>
+                                <span>R$ ${{total.toFixed(2).replace('.', ',')}}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('checkout-items').innerHTML = checkoutItems;
                     document.getElementById('checkout').style.display = 'block';
                     document.getElementById('checkout').scrollIntoView({{ behavior: 'smooth' }});
                 }}
                 
                 function sendToWhatsApp() {{
-                    const name = document.getElementById('customer_name').value;
-                    const phone = document.getElementById('customer_phone').value;
-                    const address = document.getElementById('delivery_address').value;
+                    const name = document.getElementById('customer_name').value.trim();
+                    const phone = document.getElementById('customer_phone').value.trim();
+                    const address = document.getElementById('delivery_address').value.trim();
                     
-                    if (!name || !address) {{
-                        alert('Por favor, preencha nome e endereço!');
+                    if (!name) {{
+                        alert('Por favor, preencha seu nome!');
                         return;
                     }}
                     
                     let message = `🍃 *PEDIDO EM CASA HORTIFRUTI* 🍃\\n\\n`;
                     message += `👤 *Cliente:* ${{name}}\\n`;
                     if (phone) message += `📞 *Telefone:* ${{phone}}\\n`;
-                    message += `📍 *Endereço:* ${{address}}\\n\\n`;
-                    message += `🛒 *PRODUTOS:*\\n`;
+                    if (address) message += `📍 *Endereço:* ${{address}}\\n`;
+                    message += `\\n🛒 *PRODUTOS:*\\n`;
                     
                     let subtotal = 0;
                     for (let productId in cart) {{
                         const item = cart[productId];
-                        message += `• ${{item.quantity}} ${{item.unit}} - ${{item.name}} - R$ ${{item.total.toFixed(2)}}\\n`;
-                        subtotal += item.total;
+                        const itemTotal = item.quantity * item.price;
+                        message += `• ${{item.quantity}} ${{item.unit}} - ${{item.name}} - R$ ${{itemTotal.toFixed(2).replace('.', ',')}}\\n`;
+                        subtotal += itemTotal;
                     }}
                     
                     const total = subtotal + deliveryFee;
                     message += `\\n💰 *RESUMO:*\\n`;
-                    message += `Subtotal: R$ ${{subtotal.toFixed(2)}}\\n`;
-                    message += `Taxa de entrega: R$ ${{deliveryFee.toFixed(2)}}\\n`;
-                    message += `*TOTAL: R$ ${{total.toFixed(2)}}*\\n\\n`;
+                    message += `Subtotal: R$ ${{subtotal.toFixed(2).replace('.', ',')}}\\n`;
+                    message += `Taxa de entrega: R$ ${{deliveryFee.toFixed(2).replace('.', ',')}}\\n`;
+                    message += `*TOTAL: R$ ${{total.toFixed(2).replace('.', ',')}}*\\n\\n`;
                     message += `Obrigado pela preferência! 🌱`;
                     
                     // Salvar pedido no banco
@@ -408,6 +591,12 @@ def index():
                     const whatsappUrl = `https://wa.me/${{whatsappNumber}}?text=${{encodeURIComponent(message)}}`;
                     window.open(whatsappUrl, '_blank');
                 }}
+                
+                // Inicializar displays
+                document.addEventListener('DOMContentLoaded', function() {{
+                    const minusButtons = document.querySelectorAll('[id^="minus_"]');
+                    minusButtons.forEach(btn => btn.disabled = true);
+                }});
             </script>
         </body>
         </html>
@@ -447,7 +636,7 @@ def save_order():
                 product_id=int(product_id),
                 quantity=item_data['quantity'],
                 unit_price=item_data['price'],
-                total_price=item_data['total']
+                total_price=item_data['quantity'] * item_data['price']
             )
             db.session.add(order_item)
         
@@ -515,11 +704,12 @@ def admin_dashboard():
         # Estatísticas gerais
         total_products = Product.query.filter_by(is_active=True).count()
         active_list = WeeklyList.query.filter_by(is_active=True).first()
-        total_orders = Order.query.count()
         
         recent_orders = []
+        total_orders_week = 0
         if active_list:
             recent_orders = Order.query.filter_by(weekly_list_id=active_list.id).order_by(Order.created_at.desc()).limit(5).all()
+            total_orders_week = Order.query.filter_by(weekly_list_id=active_list.id).count()
         
         # Status da lista
         list_status = "Nenhuma lista ativa"
@@ -534,14 +724,15 @@ def admin_dashboard():
         for order in recent_orders:
             orders_html += f"""
             <tr>
-                <td>{order.customer_name}</td>
+                <td><a href="/admin/orders/{order.id}" style="color: #28a745; text-decoration: none;">{order.customer_name}</a></td>
                 <td>R$ {order.total_amount:.2f}</td>
                 <td>{order.created_at.strftime('%d/%m %H:%M')}</td>
+                <td><a href="/admin/orders/{order.id}" class="btn btn-sm">Ver Detalhes</a></td>
             </tr>
             """
         
         if not orders_html:
-            orders_html = "<tr><td colspan='3'>Nenhum pedido ainda</td></tr>"
+            orders_html = "<tr><td colspan='4'>Nenhum pedido ainda</td></tr>"
         
         return f"""
         <html>
@@ -549,6 +740,7 @@ def admin_dashboard():
         <body>
             <div class="nav">
                 <a href="/admin">Dashboard</a>
+                <a href="/admin/orders">Pedidos</a>
                 <a href="/admin/products">Produtos</a>
                 <a href="/admin/create-list">Nova Lista</a>
                 <a href="/admin/reports">Relatórios</a>
@@ -569,15 +761,15 @@ def admin_dashboard():
                         <p>{list_status}</p>
                     </div>
                     <div class="product-card">
-                        <h3>🛒 Pedidos</h3>
-                        <p><strong>{total_orders}</strong> pedidos total</p>
+                        <h3>🛒 Pedidos da Semana</h3>
+                        <p><strong>{total_orders_week}</strong> pedidos</p>
                     </div>
                 </div>
                 
                 <h3>📋 Pedidos Recentes</h3>
                 <table>
                     <thead>
-                        <tr><th>Cliente</th><th>Total</th><th>Data</th></tr>
+                        <tr><th>Cliente</th><th>Total</th><th>Data</th><th>Ações</th></tr>
                     </thead>
                     <tbody>
                         {orders_html}
@@ -585,6 +777,7 @@ def admin_dashboard():
                 </table>
                 
                 <div style="margin-top: 30px;">
+                    <a href="/admin/orders" class="btn">📋 Ver Todos os Pedidos</a>
                     <a href="/admin/create-list" class="btn">➕ Nova Lista Semanal</a>
                     <a href="/admin/reports" class="btn">📊 Ver Relatórios</a>
                     <a href="/" class="btn">🌐 Ver Site</a>
@@ -596,6 +789,178 @@ def admin_dashboard():
         
     except Exception as e:
         return f"<h1>Erro: {e}</h1>"
+
+@app.route('/admin/orders')
+def admin_orders():
+    if not is_admin_logged_in():
+        return redirect('/admin/login')
+    
+    # Buscar pedidos da lista ativa
+    active_list = WeeklyList.query.filter_by(is_active=True).first()
+    
+    if not active_list:
+        return f"""
+        <html>
+        <head><title>Pedidos</title>{get_base_style()}</head>
+        <body>
+            <div class="nav">
+                <a href="/admin">Dashboard</a>
+                <a href="/admin/orders">Pedidos</a>
+                <a href="/admin/products">Produtos</a>
+                <a href="/admin/create-list">Nova Lista</a>
+                <a href="/admin/reports">Relatórios</a>
+                <a href="/admin/logout">Sair</a>
+            </div>
+            <div class="container">
+                <h1>📋 Pedidos</h1>
+                <p>Nenhuma lista ativa. Crie uma lista semanal primeiro.</p>
+                <a href="/admin/create-list" class="btn">Criar Lista Semanal</a>
+            </div>
+        </body>
+        </html>
+        """
+    
+    orders = Order.query.filter_by(weekly_list_id=active_list.id).order_by(Order.created_at.desc()).all()
+    
+    orders_html = ""
+    for order in orders:
+        phone = f"📞 {order.customer_phone}" if order.customer_phone else ""
+        address = f"📍 {order.delivery_address[:50]}..." if order.delivery_address else "📍 Endereço não informado"
+        
+        orders_html += f"""
+        <tr>
+            <td>
+                <strong>{order.customer_name}</strong><br>
+                <small>{phone}</small><br>
+                <small>{address}</small>
+            </td>
+            <td>R$ {order.total_amount:.2f}</td>
+            <td>{order.created_at.strftime('%d/%m/%Y %H:%M')}</td>
+            <td>
+                <a href="/admin/orders/{order.id}" class="btn btn-sm">👁️ Ver Detalhes</a>
+            </td>
+        </tr>
+        """
+    
+    if not orders_html:
+        orders_html = "<tr><td colspan='4'>Nenhum pedido ainda</td></tr>"
+    
+    return f"""
+    <html>
+    <head><title>Pedidos</title>{get_base_style()}</head>
+    <body>
+        <div class="nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/orders">Pedidos</a>
+            <a href="/admin/products">Produtos</a>
+            <a href="/admin/create-list">Nova Lista</a>
+            <a href="/admin/reports">Relatórios</a>
+            <a href="/admin/logout">Sair</a>
+        </div>
+        <div class="container">
+            <h1>📋 Pedidos da Semana</h1>
+            <p><strong>Período:</strong> {active_list.week_start.strftime('%d/%m')} a {active_list.week_end.strftime('%d/%m/%Y')}</p>
+            
+            <table>
+                <thead>
+                    <tr><th>Cliente</th><th>Total</th><th>Data/Hora</th><th>Ações</th></tr>
+                </thead>
+                <tbody>
+                    {orders_html}
+                </tbody>
+            </table>
+            
+            <p><em>Total: {len(orders)} pedidos</em></p>
+        </div>
+    </body>
+    </html>
+    """
+
+@app.route('/admin/orders/<int:order_id>')
+def admin_order_detail(order_id):
+    if not is_admin_logged_in():
+        return redirect('/admin/login')
+    
+    order = Order.query.get_or_404(order_id)
+    
+    # Itens do pedido
+    items_html = ""
+    for item in order.items:
+        items_html += f"""
+        <tr>
+            <td>{item.product.name}</td>
+            <td>{item.quantity} {item.product.unit}</td>
+            <td>R$ {item.unit_price:.2f}</td>
+            <td>R$ {item.total_price:.2f}</td>
+        </tr>
+        """
+    
+    phone = order.customer_phone if order.customer_phone else "Não informado"
+    address = order.delivery_address if order.delivery_address else "Não informado"
+    
+    return f"""
+    <html>
+    <head><title>Detalhes do Pedido</title>{get_base_style()}</head>
+    <body>
+        <div class="nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/orders">Pedidos</a>
+            <a href="/admin/products">Produtos</a>
+            <a href="/admin/create-list">Nova Lista</a>
+            <a href="/admin/reports">Relatórios</a>
+            <a href="/admin/logout">Sair</a>
+        </div>
+        <div class="container">
+            <h1>📋 Detalhes do Pedido #{order.id}</h1>
+            
+            <div class="product-grid" style="margin-bottom: 30px;">
+                <div class="product-card">
+                    <h3>👤 Cliente</h3>
+                    <p><strong>{order.customer_name}</strong></p>
+                    <p>📞 {phone}</p>
+                    <p>📍 {address}</p>
+                </div>
+                <div class="product-card">
+                    <h3>📅 Informações</h3>
+                    <p><strong>Data:</strong> {order.created_at.strftime('%d/%m/%Y')}</p>
+                    <p><strong>Hora:</strong> {order.created_at.strftime('%H:%M')}</p>
+                    <p><strong>Total:</strong> R$ {order.total_amount:.2f}</p>
+                </div>
+            </div>
+            
+            <h3>🛒 Itens do Pedido</h3>
+            <table>
+                <thead>
+                    <tr><th>Produto</th><th>Quantidade</th><th>Preço Unit.</th><th>Total</th></tr>
+                </thead>
+                <tbody>
+                    {items_html}
+                </tbody>
+            </table>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Subtotal:</span>
+                    <span>R$ {order.total_amount - order.delivery_fee:.2f}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Taxa de entrega:</span>
+                    <span>R$ {order.delivery_fee:.2f}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.2em; border-top: 2px solid #28a745; padding-top: 10px;">
+                    <span>TOTAL:</span>
+                    <span>R$ {order.total_amount:.2f}</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <a href="/admin/orders" class="btn">← Voltar aos Pedidos</a>
+                <a href="/admin/reports" class="btn">📊 Ver Relatórios</a>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 @app.route('/admin/products')
 def admin_products():
@@ -616,8 +981,8 @@ def admin_products():
             <td>{product.unit}</td>
             <td>{status}</td>
             <td>
-                <a href="/admin/products/{product.id}/edit" class="btn btn-warning">✏️ Editar</a>
-                <a href="/admin/products/{product.id}/delete" class="btn btn-danger" onclick="return confirm('Tem certeza?')">🗑️ Deletar</a>
+                <a href="/admin/products/{product.id}/edit" class="btn btn-warning btn-sm">✏️ Editar</a>
+                <a href="/admin/products/{product.id}/delete" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza?')">🗑️ Deletar</a>
             </td>
         </tr>
         """
@@ -634,6 +999,7 @@ def admin_products():
     <body>
         <div class="nav">
             <a href="/admin">Dashboard</a>
+            <a href="/admin/orders">Pedidos</a>
             <a href="/admin/products">Produtos</a>
             <a href="/admin/create-list">Nova Lista</a>
             <a href="/admin/reports">Relatórios</a>
@@ -874,6 +1240,7 @@ def admin_create_weekly_list():
     <body>
         <div class="nav">
             <a href="/admin">Dashboard</a>
+            <a href="/admin/orders">Pedidos</a>
             <a href="/admin/products">Produtos</a>
             <a href="/admin/create-list">Nova Lista</a>
             <a href="/admin/reports">Relatórios</a>
@@ -934,6 +1301,7 @@ def admin_reports():
         <body>
             <div class="nav">
                 <a href="/admin">Dashboard</a>
+                <a href="/admin/orders">Pedidos</a>
                 <a href="/admin/products">Produtos</a>
                 <a href="/admin/create-list">Nova Lista</a>
                 <a href="/admin/reports">Relatórios</a>
@@ -970,7 +1338,7 @@ def admin_reports():
         sales_html += f"""
         <tr>
             <td>{sale.name}</td>
-            <td>{sale.total_quantity} {sale.unit}</td>
+            <td><strong>{sale.total_quantity}</strong> {sale.unit}</td>
             <td>R$ {sale.total_revenue:.2f}</td>
         </tr>
         """
@@ -984,6 +1352,7 @@ def admin_reports():
     <body>
         <div class="nav">
             <a href="/admin">Dashboard</a>
+            <a href="/admin/orders">Pedidos</a>
             <a href="/admin/products">Produtos</a>
             <a href="/admin/create-list">Nova Lista</a>
             <a href="/admin/reports">Relatórios</a>
@@ -1002,17 +1371,27 @@ def admin_reports():
                     <h3>💰 Receita Total</h3>
                     <p><strong>R$ {total_revenue:.2f}</strong></p>
                 </div>
+                <div class="product-card">
+                    <h3>📋 Ações</h3>
+                    <p><a href="/admin/orders" class="btn btn-sm">Ver Pedidos Individuais</a></p>
+                </div>
             </div>
             
-            <h3>📦 Produtos Mais Vendidos</h3>
+            <h3>📦 Volume de Produtos Vendidos</h3>
+            <p><em>Use esta lista para organizar as compras e preparar as sacolas:</em></p>
             <table>
                 <thead>
-                    <tr><th>Produto</th><th>Quantidade</th><th>Receita</th></tr>
+                    <tr><th>Produto</th><th>Quantidade Total</th><th>Receita</th></tr>
                 </thead>
                 <tbody>
                     {sales_html}
                 </tbody>
             </table>
+            
+            <div style="margin-top: 30px;">
+                <a href="/admin/orders" class="btn">📋 Ver Pedidos por Cliente</a>
+                <a href="/admin" class="btn">← Voltar ao Dashboard</a>
+            </div>
         </div>
     </body>
     </html>
