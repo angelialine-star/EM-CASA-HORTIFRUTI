@@ -261,6 +261,7 @@ def get_base_style():
         /* Checkout */
         .checkout-section { 
             margin-top: 30px; 
+            margin-bottom: 120px;
             padding: 25px; 
             border: 3px solid #28a745; 
             border-radius: 15px; 
@@ -352,7 +353,7 @@ def index():
             """
             
             for product in products:
-                organic_badge = '<span class="organic-badge">🌱 ORGÂNICO</span>' if product.is_organic else ""
+                organic_badge = '<span class="organic-badge">🌱 AGROECOLÓGICO</span>' if product.is_organic else ""
                 products_html += f"""
                 <div class="product-card">
                     <div class="product-name">{product.name}</div>
@@ -972,11 +973,11 @@ def admin_products():
     products_html = ""
     for product in products:
         status = "✅ Ativo" if product.is_active else "❌ Inativo"
-        organic = "🌱" if product.is_organic else ""
+        agroecological = "🌱" if product.is_organic else ""
         products_html += f"""
         <tr>
             <td>{product.category.emoji} {product.category.name}</td>
-            <td>{product.name} {organic}</td>
+            <td>{product.name} {agroecological}</td>
             <td>R$ {product.price:.2f}</td>
             <td>{product.unit}</td>
             <td>{status}</td>
@@ -1048,7 +1049,7 @@ def admin_products():
                     </div>
                     <div class="form-group">
                         <label>
-                            <input type="checkbox" name="is_organic" value="1"> 🌱 Produto orgânico
+                            <input type="checkbox" name="is_organic" value="1"> 🌱 Produto agroecológico
                         </label>
                     </div>
                     <button type="submit" class="btn">Adicionar</button>
@@ -1137,7 +1138,7 @@ def admin_edit_product(product_id):
                 </div>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" name="is_organic" value="1" {organic_checked}> 🌱 Produto orgânico
+                        <input type="checkbox" name="is_organic" value="1" {organic_checked}> 🌱 Produto agroecológico
                     </label>
                 </div>
                 <div class="form-group">
@@ -1226,11 +1227,11 @@ def admin_create_weekly_list():
         if products:
             products_html += f'<h4>{category.emoji} {category.name}</h4>'
             for product in products:
-                organic = "🌱" if product.is_organic else ""
+                agroecological = "🌱" if product.is_organic else ""
                 products_html += f"""
                 <label style="display: block; margin: 5px 0;">
                     <input type="checkbox" name="products" value="{product.id}">
-                    {product.name} {organic} - R$ {product.price:.2f}/{product.unit}
+                    {product.name} {agroecological} - R$ {product.price:.2f}/{product.unit}
                 </label>
                 """
     
