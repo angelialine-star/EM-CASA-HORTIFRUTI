@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+
+from flask import Flask, request, redirect, url_for, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
-import urllib.parse
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'em-casa-hortifruti-railway-secret-key-2024')
@@ -109,13 +109,20 @@ def init_db():
                 {'name': 'Alface Americana', 'price': 5.00, 'unit': 'un', 'is_organic': True, 'category': 'FOLHAS'},
                 {'name': 'Couve', 'price': 5.00, 'unit': 'un', 'is_organic': True, 'category': 'FOLHAS'},
                 {'name': 'Rúcula', 'price': 6.00, 'unit': 'un', 'is_organic': True, 'category': 'FOLHAS'},
+                {'name': 'Salsinha', 'price': 5.00, 'unit': 'maço', 'is_organic': True, 'category': 'FOLHAS'},
+                {'name': 'Coentro', 'price': 5.00, 'unit': 'maço', 'is_organic': True, 'category': 'FOLHAS'},
                 {'name': 'Batata Doce', 'price': 7.00, 'unit': 'kg', 'is_organic': True, 'category': 'RAÍZES & LEGUMES'},
                 {'name': 'Tomate', 'price': 6.20, 'unit': 'kg', 'is_organic': False, 'category': 'RAÍZES & LEGUMES'},
                 {'name': 'Abobrinha', 'price': 6.00, 'unit': 'un', 'is_organic': True, 'category': 'RAÍZES & LEGUMES'},
+                {'name': 'Berinjela', 'price': 4.00, 'unit': 'un', 'is_organic': True, 'category': 'RAÍZES & LEGUMES'},
+                {'name': 'Pepino', 'price': 4.00, 'unit': 'un', 'is_organic': True, 'category': 'RAÍZES & LEGUMES'},
                 {'name': 'Banana Prata', 'price': 7.00, 'unit': 'palma', 'is_organic': True, 'category': 'FRUTAS'},
                 {'name': 'Limão Tahiti', 'price': 6.50, 'unit': 'kg', 'is_organic': True, 'category': 'FRUTAS'},
+                {'name': 'Laranja Pera', 'price': 7.20, 'unit': 'kg', 'is_organic': True, 'category': 'FRUTAS'},
                 {'name': 'Ovos Caipira', 'price': 17.00, 'unit': 'dúzia', 'is_organic': False, 'category': 'ORIGEM ANIMAL'},
                 {'name': 'Mel Silvestre', 'price': 40.00, 'unit': '400g', 'is_organic': True, 'category': 'ORIGEM ANIMAL'},
+                {'name': 'Pimenta de Cheiro', 'price': 6.00, 'unit': '100g', 'is_organic': False, 'category': 'TEMPEROS'},
+                {'name': 'Orégano', 'price': 8.00, 'unit': '100g', 'is_organic': False, 'category': 'TEMPEROS'},
             ]
             
             for product_data in sample_products:
@@ -140,6 +147,36 @@ def init_db():
 def is_admin_logged_in():
     return 'admin_id' in session
 
+# Templates HTML embutidos
+def get_base_style():
+    return """
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .btn { padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; margin: 5px; }
+        .btn:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .form-group { margin-bottom: 15px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .product-card { border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white; }
+        .category-header { background: #007bff; color: white; padding: 10px; margin: 20px 0 10px 0; border-radius: 5px; }
+        .cart { position: fixed; bottom: 20px; right: 20px; background: #28a745; color: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .quantity-input { width: 60px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+        .nav { background: #343a40; padding: 10px 0; margin-bottom: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 15px; margin: 0 5px; }
+        .nav a:hover { background: #495057; border-radius: 5px; }
+    </style>
+    """
+
 # Rotas principais
 @app.route('/')
 def index():
@@ -148,7 +185,21 @@ def index():
         active_list = WeeklyList.query.filter_by(is_active=True, is_closed=False).first()
         
         if not active_list:
-            return render_template('no_list.html')
+            return f"""
+            <html>
+            <head><title>Em Casa - Hortifruti</title>{get_base_style()}</head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🍃 Em Casa - Hortifruti Delivery</h1>
+                        <p>Lista da semana não disponível no momento.</p>
+                        <p>Entre em contato pelo WhatsApp: <strong>+55 (82) 99660-3943</strong></p>
+                        <a href="/admin/login" class="btn">Área Administrativa</a>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
         
         # Buscar produtos da semana agrupados por categoria
         categories = db.session.query(Category).join(WeeklyProduct).join(Product).filter(
@@ -156,21 +207,205 @@ def index():
             Product.is_active == True
         ).order_by(Category.order).all()
         
-        products_by_category = {}
+        products_html = ""
         for category in categories:
             products = db.session.query(Product).join(WeeklyProduct).filter(
                 WeeklyProduct.weekly_list_id == active_list.id,
                 Product.category_id == category.id,
                 Product.is_active == True
             ).order_by(Product.name).all()
-            products_by_category[category] = products
+            
+            if products:
+                products_html += f'<div class="category-header"><h3>{category.emoji} {category.name}</h3></div>'
+                products_html += '<div class="product-grid">'
+                
+                for product in products:
+                    organic_badge = "🌱 ORGÂNICO" if product.is_organic else ""
+                    products_html += f"""
+                    <div class="product-card">
+                        <h4>{product.name} {organic_badge}</h4>
+                        <p><strong>R$ {product.price:.2f}</strong> / {product.unit}</p>
+                        <div class="form-group">
+                            <label>Quantidade:</label>
+                            <input type="number" class="quantity-input" id="qty_{product.id}" min="0" step="0.5" value="0" onchange="updateCart({product.id}, '{product.name}', {product.price}, '{product.unit}')">
+                        </div>
+                    </div>
+                    """
+                
+                products_html += '</div>'
         
-        return render_template('index.html', 
-                             products_by_category=products_by_category,
-                             weekly_list=active_list)
+        return f"""
+        <html>
+        <head>
+            <title>Em Casa - Hortifruti</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            {get_base_style()}
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🍃 Em Casa - Hortifruti Delivery</h1>
+                    <p>Lista da semana: {active_list.week_start.strftime('%d/%m')} a {active_list.week_end.strftime('%d/%m/%Y')}</p>
+                </div>
+                
+                {products_html}
+                
+                <div id="cart" class="cart" style="display: none;">
+                    <h4>🛒 Carrinho</h4>
+                    <div id="cart-items"></div>
+                    <div id="cart-total"></div>
+                    <button class="btn" onclick="showCheckout()">Finalizar Pedido</button>
+                </div>
+                
+                <div id="checkout" style="display: none; margin-top: 30px; padding: 20px; border: 2px solid #28a745; border-radius: 10px;">
+                    <h3>📋 Finalizar Pedido</h3>
+                    <form id="checkout-form">
+                        <div class="form-group">
+                            <label>Nome completo:</label>
+                            <input type="text" class="form-control" id="customer_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Telefone:</label>
+                            <input type="tel" class="form-control" id="customer_phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Endereço de entrega:</label>
+                            <textarea class="form-control" id="delivery_address" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Local de entrega:</label>
+                            <select class="form-control" id="delivery_location" onchange="updateDeliveryFee()">
+                                <option value="maceio">Maceió (Taxa: R$ 10,00)</option>
+                                <option value="paripueira">Paripueira (Taxa: R$ 10,00)</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn" onclick="sendToWhatsApp()">📱 Enviar via WhatsApp</button>
+                    </form>
+                </div>
+            </div>
+            
+            <script>
+                let cart = {{}};
+                let deliveryFee = 10.00;
+                
+                function updateCart(productId, productName, price, unit) {{
+                    const qty = parseFloat(document.getElementById('qty_' + productId).value) || 0;
+                    
+                    if (qty > 0) {{
+                        cart[productId] = {{
+                            name: productName,
+                            price: price,
+                            unit: unit,
+                            quantity: qty,
+                            total: qty * price
+                        }};
+                    }} else {{
+                        delete cart[productId];
+                    }}
+                    
+                    updateCartDisplay();
+                }}
+                
+                function updateCartDisplay() {{
+                    const cartDiv = document.getElementById('cart');
+                    const cartItems = document.getElementById('cart-items');
+                    const cartTotal = document.getElementById('cart-total');
+                    
+                    if (Object.keys(cart).length === 0) {{
+                        cartDiv.style.display = 'none';
+                        return;
+                    }}
+                    
+                    cartDiv.style.display = 'block';
+                    
+                    let itemsHtml = '';
+                    let subtotal = 0;
+                    
+                    for (let productId in cart) {{
+                        const item = cart[productId];
+                        itemsHtml += `<div>${{item.quantity}} ${{item.unit}} - ${{item.name}} - R$ ${{item.total.toFixed(2)}}</div>`;
+                        subtotal += item.total;
+                    }}
+                    
+                    const total = subtotal + deliveryFee;
+                    
+                    cartItems.innerHTML = itemsHtml;
+                    cartTotal.innerHTML = `
+                        <div><strong>Subtotal: R$ ${{subtotal.toFixed(2)}}</strong></div>
+                        <div>Taxa de entrega: R$ ${{deliveryFee.toFixed(2)}}</div>
+                        <div><strong>Total: R$ ${{total.toFixed(2)}}</strong></div>
+                    `;
+                }}
+                
+                function updateDeliveryFee() {{
+                    deliveryFee = 10.00; // Mesmo valor para ambos
+                    updateCartDisplay();
+                }}
+                
+                function showCheckout() {{
+                    document.getElementById('checkout').style.display = 'block';
+                    document.getElementById('checkout').scrollIntoView({{ behavior: 'smooth' }});
+                }}
+                
+                function sendToWhatsApp() {{
+                    const name = document.getElementById('customer_name').value;
+                    const phone = document.getElementById('customer_phone').value;
+                    const address = document.getElementById('delivery_address').value;
+                    
+                    if (!name || !address) {{
+                        alert('Por favor, preencha nome e endereço!');
+                        return;
+                    }}
+                    
+                    let message = `🍃 *PEDIDO EM CASA HORTIFRUTI* 🍃\\n\\n`;
+                    message += `👤 *Cliente:* ${{name}}\\n`;
+                    if (phone) message += `📞 *Telefone:* ${{phone}}\\n`;
+                    message += `📍 *Endereço:* ${{address}}\\n\\n`;
+                    message += `🛒 *PRODUTOS:*\\n`;
+                    
+                    let subtotal = 0;
+                    for (let productId in cart) {{
+                        const item = cart[productId];
+                        message += `• ${{item.quantity}} ${{item.unit}} - ${{item.name}} - R$ ${{item.total.toFixed(2)}}\\n`;
+                        subtotal += item.total;
+                    }}
+                    
+                    const total = subtotal + deliveryFee;
+                    message += `\\n💰 *RESUMO:*\\n`;
+                    message += `Subtotal: R$ ${{subtotal.toFixed(2)}}\\n`;
+                    message += `Taxa de entrega: R$ ${{deliveryFee.toFixed(2)}}\\n`;
+                    message += `*TOTAL: R$ ${{total.toFixed(2)}}*\\n\\n`;
+                    message += `Obrigado pela preferência! 🌱`;
+                    
+                    // Salvar pedido no banco
+                    const orderData = {{
+                        customer_name: name,
+                        customer_phone: phone,
+                        delivery_address: address,
+                        delivery_fee: deliveryFee,
+                        total_amount: total,
+                        items: cart
+                    }};
+                    
+                    fetch('/api/save-order', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify(orderData)
+                    }});
+                    
+                    // Enviar para WhatsApp
+                    const whatsappNumber = '5582996603943';
+                    const whatsappUrl = `https://wa.me/${{whatsappNumber}}?text=${{encodeURIComponent(message)}}`;
+                    window.open(whatsappUrl, '_blank');
+                }}
+            </script>
+        </body>
+        </html>
+        """
+        
     except Exception as e:
         print(f"❌ Erro na página inicial: {e}")
-        return render_template('no_list.html')
+        return f"<h1>Erro: {e}</h1>"
 
 # API para salvar pedidos
 @app.route('/api/save-order', methods=['POST'])
@@ -224,23 +459,47 @@ def admin_login():
         
         if admin and check_password_hash(admin.password_hash, password):
             session['admin_id'] = admin.id
-            flash('Login realizado com sucesso!', 'success')
-            return redirect(url_for('admin_dashboard'))
+            return redirect('/admin')
         else:
-            flash('Usuário ou senha incorretos!', 'error')
+            error_msg = '<div class="alert alert-error">❌ Usuário ou senha incorretos!</div>'
+    else:
+        error_msg = ''
     
-    return render_template('admin/login.html')
+    return f"""
+    <html>
+    <head><title>Login Admin</title>{get_base_style()}</head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h2>🔐 Login Administrativo</h2>
+            </div>
+            {error_msg}
+            <form method="POST">
+                <div class="form-group">
+                    <label>Usuário:</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha:</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn">Entrar</button>
+            </form>
+            <p><small>Usuário: mario | Senha: 3943</small></p>
+        </div>
+    </body>
+    </html>
+    """
 
 @app.route('/admin/logout')
 def admin_logout():
     session.pop('admin_id', None)
-    flash('Logout realizado com sucesso!', 'success')
-    return redirect(url_for('index'))
+    return redirect('/')
 
 @app.route('/admin')
 def admin_dashboard():
     if not is_admin_logged_in():
-        return redirect(url_for('admin_login'))
+        return redirect('/admin/login')
     
     try:
         # Estatísticas gerais
@@ -252,31 +511,133 @@ def admin_dashboard():
         if active_list:
             recent_orders = Order.query.filter_by(weekly_list_id=active_list.id).order_by(Order.created_at.desc()).limit(5).all()
         
-        return render_template('admin/dashboard.html',
-                             total_products=total_products,
-                             active_list=active_list,
-                             total_orders=total_orders,
-                             recent_orders=recent_orders)
+        # Status da lista
+        list_status = "Nenhuma lista ativa"
+        if active_list:
+            if active_list.is_closed:
+                list_status = f"Lista encerrada ({active_list.week_start.strftime('%d/%m')} a {active_list.week_end.strftime('%d/%m')})"
+            else:
+                list_status = f"Lista ativa ({active_list.week_start.strftime('%d/%m')} a {active_list.week_end.strftime('%d/%m')})"
+        
+        # Pedidos recentes HTML
+        orders_html = ""
+        for order in recent_orders:
+            orders_html += f"""
+            <tr>
+                <td>{order.customer_name}</td>
+                <td>R$ {order.total_amount:.2f}</td>
+                <td>{order.created_at.strftime('%d/%m %H:%M')}</td>
+            </tr>
+            """
+        
+        return f"""
+        <html>
+        <head><title>Painel Admin</title>{get_base_style()}</head>
+        <body>
+            <div class="nav">
+                <a href="/admin">Dashboard</a>
+                <a href="/admin/products">Produtos</a>
+                <a href="/admin/create-list">Nova Lista</a>
+                <a href="/admin/reports">Relatórios</a>
+                <a href="/admin/logout">Sair</a>
+            </div>
+            <div class="container">
+                <div class="header">
+                    <h1>📊 Painel Administrativo</h1>
+                </div>
+                
+                <div class="product-grid">
+                    <div class="product-card">
+                        <h3>📦 Produtos</h3>
+                        <p><strong>{total_products}</strong> produtos ativos</p>
+                    </div>
+                    <div class="product-card">
+                        <h3>📋 Lista Semanal</h3>
+                        <p>{list_status}</p>
+                    </div>
+                    <div class="product-card">
+                        <h3>🛒 Pedidos</h3>
+                        <p><strong>{total_orders}</strong> pedidos total</p>
+                    </div>
+                </div>
+                
+                <h3>📋 Pedidos Recentes</h3>
+                <table>
+                    <thead>
+                        <tr><th>Cliente</th><th>Total</th><th>Data</th></tr>
+                    </thead>
+                    <tbody>
+                        {orders_html}
+                    </tbody>
+                </table>
+                
+                <div style="margin-top: 30px;">
+                    <a href="/admin/create-list" class="btn">➕ Nova Lista Semanal</a>
+                    <a href="/admin/reports" class="btn">📊 Ver Relatórios</a>
+                    <a href="/" class="btn">🌐 Ver Site</a>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
     except Exception as e:
-        print(f"❌ Erro no dashboard: {e}")
-        return render_template('admin/dashboard.html',
-                             total_products=0,
-                             active_list=None,
-                             total_orders=0,
-                             recent_orders=[])
+        return f"<h1>Erro: {e}</h1>"
 
 @app.route('/admin/products')
 def admin_products():
     if not is_admin_logged_in():
-        return redirect(url_for('admin_login'))
+        return redirect('/admin/login')
     
     products = Product.query.join(Category).order_by(Category.order, Product.name).all()
-    return render_template('admin/products.html', products=products)
+    
+    products_html = ""
+    for product in products:
+        status = "✅ Ativo" if product.is_active else "❌ Inativo"
+        organic = "🌱" if product.is_organic else ""
+        products_html += f"""
+        <tr>
+            <td>{product.category.emoji} {product.category.name}</td>
+            <td>{product.name} {organic}</td>
+            <td>R$ {product.price:.2f}</td>
+            <td>{product.unit}</td>
+            <td>{status}</td>
+        </tr>
+        """
+    
+    return f"""
+    <html>
+    <head><title>Produtos</title>{get_base_style()}</head>
+    <body>
+        <div class="nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/products">Produtos</a>
+            <a href="/admin/create-list">Nova Lista</a>
+            <a href="/admin/reports">Relatórios</a>
+            <a href="/admin/logout">Sair</a>
+        </div>
+        <div class="container">
+            <h1>📦 Gestão de Produtos</h1>
+            
+            <table>
+                <thead>
+                    <tr><th>Categoria</th><th>Produto</th><th>Preço</th><th>Unidade</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    {products_html}
+                </tbody>
+            </table>
+            
+            <p><em>Total: {len(products)} produtos cadastrados</em></p>
+        </div>
+    </body>
+    </html>
+    """
 
-@app.route('/admin/weekly-lists/create', methods=['GET', 'POST'])
+@app.route('/admin/create-list', methods=['GET', 'POST'])
 def admin_create_weekly_list():
     if not is_admin_logged_in():
-        return redirect(url_for('admin_login'))
+        return redirect('/admin/login')
     
     if request.method == 'POST':
         try:
@@ -305,57 +666,191 @@ def admin_create_weekly_list():
                 db.session.add(weekly_product)
             
             db.session.commit()
-            flash('Lista semanal criada com sucesso!', 'success')
-            return redirect(url_for('admin_dashboard'))
+            
+            return f"""
+            <html>
+            <head><title>Lista Criada</title>{get_base_style()}</head>
+            <body>
+                <div class="container">
+                    <div class="alert alert-success">
+                        ✅ Lista semanal criada com sucesso!
+                    </div>
+                    <a href="/admin" class="btn">Voltar ao Dashboard</a>
+                    <a href="/" class="btn">Ver Site</a>
+                </div>
+            </body>
+            </html>
+            """
+            
         except Exception as e:
-            db.session.rollback()
-            flash(f'Erro ao criar lista: {e}', 'error')
+            return f"<h1>Erro ao criar lista: {e}</h1>"
     
     # Buscar produtos por categoria
     categories = Category.query.order_by(Category.order).all()
-    products_by_category = {}
+    
+    products_html = ""
     for category in categories:
         products = Product.query.filter_by(category_id=category.id, is_active=True).order_by(Product.name).all()
         if products:
-            products_by_category[category] = products
+            products_html += f'<h4>{category.emoji} {category.name}</h4>'
+            for product in products:
+                organic = "🌱" if product.is_organic else ""
+                products_html += f"""
+                <label style="display: block; margin: 5px 0;">
+                    <input type="checkbox" name="products" value="{product.id}">
+                    {product.name} {organic} - R$ {product.price:.2f}/{product.unit}
+                </label>
+                """
     
-    return render_template('admin/create_weekly_list.html', 
-                         products_by_category=products_by_category)
+    return f"""
+    <html>
+    <head><title>Nova Lista</title>{get_base_style()}</head>
+    <body>
+        <div class="nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/products">Produtos</a>
+            <a href="/admin/create-list">Nova Lista</a>
+            <a href="/admin/reports">Relatórios</a>
+            <a href="/admin/logout">Sair</a>
+        </div>
+        <div class="container">
+            <h1>📋 Nova Lista Semanal</h1>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label>Data de início:</label>
+                    <input type="date" name="week_start" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Data de fim:</label>
+                    <input type="date" name="week_end" class="form-control" required>
+                </div>
+                
+                <h3>Selecionar Produtos:</h3>
+                <button type="button" onclick="selectAll()" class="btn">Selecionar Todos</button>
+                <button type="button" onclick="selectNone()" class="btn">Desmarcar Todos</button>
+                
+                <div style="margin: 20px 0;">
+                    {products_html}
+                </div>
+                
+                <button type="submit" class="btn">✅ Criar Lista Semanal</button>
+            </form>
+            
+            <script>
+                function selectAll() {{
+                    const checkboxes = document.querySelectorAll('input[name="products"]');
+                    checkboxes.forEach(cb => cb.checked = true);
+                }}
+                
+                function selectNone() {{
+                    const checkboxes = document.querySelectorAll('input[name="products"]');
+                    checkboxes.forEach(cb => cb.checked = false);
+                }}
+            </script>
+        </div>
+    </body>
+    </html>
+    """
 
 @app.route('/admin/reports')
 def admin_reports():
     if not is_admin_logged_in():
-        return redirect(url_for('admin_login'))
+        return redirect('/admin/login')
     
     # Relatório da semana atual
     active_list = WeeklyList.query.filter_by(is_active=True).first()
     
-    weekly_report = None
-    if active_list:
-        # Produtos mais vendidos
-        product_sales = db.session.query(
-            Product.name,
-            Product.unit,
-            db.func.sum(OrderItem.quantity).label('total_quantity'),
-            db.func.sum(OrderItem.total_price).label('total_revenue')
-        ).join(OrderItem).join(Order).filter(
-            Order.weekly_list_id == active_list.id
-        ).group_by(Product.id).order_by(db.func.sum(OrderItem.quantity).desc()).all()
-        
-        # Total de pedidos e receita
-        total_orders = Order.query.filter_by(weekly_list_id=active_list.id).count()
-        total_revenue = db.session.query(db.func.sum(Order.total_amount)).filter(
-            Order.weekly_list_id == active_list.id
-        ).scalar() or 0
-        
-        weekly_report = {
-            'list': active_list,
-            'total_orders': total_orders,
-            'total_revenue': total_revenue,
-            'product_sales': product_sales
-        }
+    if not active_list:
+        return f"""
+        <html>
+        <head><title>Relatórios</title>{get_base_style()}</head>
+        <body>
+            <div class="nav">
+                <a href="/admin">Dashboard</a>
+                <a href="/admin/products">Produtos</a>
+                <a href="/admin/create-list">Nova Lista</a>
+                <a href="/admin/reports">Relatórios</a>
+                <a href="/admin/logout">Sair</a>
+            </div>
+            <div class="container">
+                <h1>📊 Relatórios</h1>
+                <p>Nenhuma lista ativa para gerar relatórios.</p>
+                <a href="/admin/create-list" class="btn">Criar Lista Semanal</a>
+            </div>
+        </body>
+        </html>
+        """
     
-    return render_template('admin/reports.html', weekly_report=weekly_report)
+    # Produtos mais vendidos
+    product_sales = db.session.query(
+        Product.name,
+        Product.unit,
+        db.func.sum(OrderItem.quantity).label('total_quantity'),
+        db.func.sum(OrderItem.total_price).label('total_revenue')
+    ).join(OrderItem).join(Order).filter(
+        Order.weekly_list_id == active_list.id
+    ).group_by(Product.id).order_by(db.func.sum(OrderItem.quantity).desc()).all()
+    
+    # Total de pedidos e receita
+    total_orders = Order.query.filter_by(weekly_list_id=active_list.id).count()
+    total_revenue = db.session.query(db.func.sum(Order.total_amount)).filter(
+        Order.weekly_list_id == active_list.id
+    ).scalar() or 0
+    
+    # HTML dos produtos vendidos
+    sales_html = ""
+    for sale in product_sales:
+        sales_html += f"""
+        <tr>
+            <td>{sale.name}</td>
+            <td>{sale.total_quantity} {sale.unit}</td>
+            <td>R$ {sale.total_revenue:.2f}</td>
+        </tr>
+        """
+    
+    if not sales_html:
+        sales_html = "<tr><td colspan='3'>Nenhum pedido ainda</td></tr>"
+    
+    return f"""
+    <html>
+    <head><title>Relatórios</title>{get_base_style()}</head>
+    <body>
+        <div class="nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/products">Produtos</a>
+            <a href="/admin/create-list">Nova Lista</a>
+            <a href="/admin/reports">Relatórios</a>
+            <a href="/admin/logout">Sair</a>
+        </div>
+        <div class="container">
+            <h1>📊 Relatórios da Semana</h1>
+            <p><strong>Período:</strong> {active_list.week_start.strftime('%d/%m')} a {active_list.week_end.strftime('%d/%m/%Y')}</p>
+            
+            <div class="product-grid">
+                <div class="product-card">
+                    <h3>🛒 Total de Pedidos</h3>
+                    <p><strong>{total_orders}</strong></p>
+                </div>
+                <div class="product-card">
+                    <h3>💰 Receita Total</h3>
+                    <p><strong>R$ {total_revenue:.2f}</strong></p>
+                </div>
+            </div>
+            
+            <h3>📦 Produtos Mais Vendidos</h3>
+            <table>
+                <thead>
+                    <tr><th>Produto</th><th>Quantidade</th><th>Receita</th></tr>
+                </thead>
+                <tbody>
+                    {sales_html}
+                </tbody>
+            </table>
+        </div>
+    </body>
+    </html>
+    """
 
 # Rota de saúde para Railway
 @app.route('/health')
@@ -374,3 +869,4 @@ else:
     # Para Railway (quando executado via gunicorn)
     with app.app_context():
         init_db()
+
