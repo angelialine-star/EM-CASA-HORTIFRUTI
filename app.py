@@ -704,6 +704,7 @@ def admin_dashboard():
     try:
         # Estatísticas gerais
         total_products = Product.query.filter_by(is_active=True).count()
+        total_categories = Category.query.count()
         active_list = WeeklyList.query.filter_by(is_active=True).first()
         
         recent_orders = []
@@ -743,6 +744,7 @@ def admin_dashboard():
                 <a href="/admin">Dashboard</a>
                 <a href="/admin/orders">Pedidos</a>
                 <a href="/admin/products">Produtos</a>
+                <a href="/admin/categories">Categorias</a>
                 <a href="/admin/create-list">Nova Lista</a>
                 <a href="/admin/reports">Relatórios</a>
                 <a href="/admin/logout">Sair</a>
@@ -756,6 +758,10 @@ def admin_dashboard():
                     <div class="product-card">
                         <h3>📦 Produtos</h3>
                         <p><strong>{total_products}</strong> produtos ativos</p>
+                    </div>
+                    <div class="product-card">
+                        <h3>🏷️ Categorias</h3>
+                        <p><strong>{total_categories}</strong> categorias</p>
                     </div>
                     <div class="product-card">
                         <h3>📋 Lista Semanal</h3>
@@ -779,6 +785,7 @@ def admin_dashboard():
                 
                 <div style="margin-top: 30px;">
                     <a href="/admin/orders" class="btn">📋 Ver Todos os Pedidos</a>
+                    <a href="/admin/categories" class="btn">🏷️ Gerenciar Categorias</a>
                     <a href="/admin/create-list" class="btn">➕ Nova Lista Semanal</a>
                     <a href="/admin/reports" class="btn">📊 Ver Relatórios</a>
                     <a href="/" class="btn">🌐 Ver Site</a>
@@ -791,6 +798,184 @@ def admin_dashboard():
     except Exception as e:
         return f"<h1>Erro: {e}</h1>"
 
+# NOVAS ROTAS PARA GESTÃO DE CATEGORIAS
+
+@app.route('/admin/categories')
+def admin_categories():
+    if not is_admin_logged_in():
+        return redirect('/admin/login')
+    
+    categories = Category.query.order_by(Category.order).all()
+    
+    categories_html = ""
+    for category in categories:
+        product_count = Product.query.filter_by(category_id=category.id).count()
+        categories_html += f"""
+        <tr>
+            <td>{category.order}</td>
+            <td>{category.emoji}</td>
+            <td>{category.name}</td>
+            <td>{product_count} produtos</td>
+            <td>
+                <a href="/admin/categories/{category.id}/edit" class="btn btn-warning btn-sm">✏️ Editar</a>
+                <a href="/admin/categories/{category.id}/delete" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza? Isso pode afetar produtos desta categoria.')">🗑️ Deletar</a>
+            </td>
+        </tr>
+        """
+    
+    return f"""
+    <html>
+    <head><title>Categorias</title>{get_base_style()}</head>
+    <body>
+        <div class="nav">
+            <a href="/admin">Dashboard</a>
+            <a href="/admin/orders">Pedidos</a>
+            <a href="/admin/products">Produtos</a>
+            <a href="/admin/categories">Categorias</a>
+            <a href="/admin/create-list">Nova Lista</a>
+            <a href="/admin/reports">Relatórios</a>
+            <a href="/admin/logout">Sair</a>
+        </div>
+        <div class="container">
+            <h1>🏷️ Gestão de Categorias</h1>
+            
+            <button onclick="document.getElementById('addModal').style.display='block'" class="btn">➕ Adicionar Categoria</button>
+            
+            <table>
+                <thead>
+                    <tr><th>Ordem</th><th>Emoji</th><th>Nome</th><th>Produtos</th><th>Ações</th></tr>
+                </thead>
+                <tbody>
+                    {categories_html}
+                </tbody>
+            </table>
+            
+            <p><em>Total: {len(categories)} categorias</em></p>
+            <p><small>💡 Dica: A ordem determina como as categorias aparecem no site.</small></p>
+        </div>
+        
+        <!-- Modal Adicionar Categoria -->
+        <div id="addModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="document.getElementById('addModal').style.display='none'">&times;</span>
+                <h2>➕ Adicionar Categoria</h2>
+                <form method="POST" action="/admin/categories/add">
+                    <div class="form-group">
+                        <label>Nome da categoria:</label>
+                        <input type="text" name="name" class="form-control" placeholder="Ex: CHÁS" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Emoji:</label>
+                        <input type="text" name="emoji" class="form-control" placeholder="Ex: 🍵" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ordem de exibição:</label>
+                        <input type="number" name="order" class="form-control" value="{len(categories) + 1}" required>
+                    </div>
+                    <button type="submit" class="btn">Adicionar</button>
+                </form>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+@app.route('/admin/categories/add', methods=['POST'])
+def admin_add_category():
+    if not is_admin_logged_in():
+        return redirect('/admin/login')
+    
+    try:
+        category = Category(
+            name=request.form['name'].upper(),
+            emoji=request.form['emoji'],
+            order=int(request.form['order'])
+        )
+        db.session.add(category)
+        db.session.commit()
+        return redirect('/admin/categories')
+    except Exception as e:
+        return f"<h1>Erro ao adicionar categoria: {e}</h1>"
+
+@app.route('/admin/categories/<int:category_id>/edit', methods=['GET', 'POST'])
+def admin_edit_category(category_id):
+    if not is_admin_logged_in():
+        return redirect('/admin/login')
+    
+    category = Category.query.get_or_404(category_id)
+    
+    if request.method == 'POST':
+        try:
+            category.name = request.form['name'].upper()
+            category.emoji = request.form['emoji']
+            category.order = int(request.form['order'])
+            
+            db.session.commit()
+            return redirect('/admin/categories')
+        except Exception as e:
+            return f"<h1>Erro ao editar categoria: {e}</h1>"
+    
+    return f"""
+    <html>
+    <head><title>Editar Categoria</title>{get_base_style()}</head>
+    <body>
+        <div class="container">
+            <h1>✏️ Editar Categoria</h1>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label>Nome da categoria:</label>
+                    <input type="text" name="name" class="form-control" value="{category.name}" required>
+                </div>
+                <div class="form-group">
+                    <label>Emoji:</label>
+                    <input type="text" name="emoji" class="form-control" value="{category.emoji}" required>
+                </div>
+                <div class="form-group">
+                    <label>Ordem de exibição:</label>
+                    <input type="number" name="order" class="form-control" value="{category.order}" required>
+                </div>
+                <button type="submit" class="btn">💾 Salvar</button>
+                <a href="/admin/categories" class="btn btn-danger">❌ Cancelar</a>
+            </form>
+        </div>
+    </body>
+    </html>
+    """
+
+@app.route('/admin/categories/<int:category_id>/delete')
+def admin_delete_category(category_id):
+    if not is_admin_logged_in():
+        return redirect('/admin/login')
+    
+    try:
+        category = Category.query.get_or_404(category_id)
+        
+        # Verificar se há produtos nesta categoria
+        product_count = Product.query.filter_by(category_id=category_id).count()
+        if product_count > 0:
+            return f"""
+            <html>
+            <head><title>Erro</title>{get_base_style()}</head>
+            <body>
+                <div class="container">
+                    <div class="alert alert-error">
+                        ❌ Não é possível deletar esta categoria pois ela possui {product_count} produtos.
+                        <br>Mova os produtos para outra categoria primeiro.
+                    </div>
+                    <a href="/admin/categories" class="btn">← Voltar às Categorias</a>
+                </div>
+            </body>
+            </html>
+            """
+        
+        db.session.delete(category)
+        db.session.commit()
+        return redirect('/admin/categories')
+    except Exception as e:
+        return f"<h1>Erro ao deletar categoria: {e}</h1>"
+
+# Continuar com as outras rotas existentes...
 @app.route('/admin/orders')
 def admin_orders():
     if not is_admin_logged_in():
@@ -808,6 +993,7 @@ def admin_orders():
                 <a href="/admin">Dashboard</a>
                 <a href="/admin/orders">Pedidos</a>
                 <a href="/admin/products">Produtos</a>
+                <a href="/admin/categories">Categorias</a>
                 <a href="/admin/create-list">Nova Lista</a>
                 <a href="/admin/reports">Relatórios</a>
                 <a href="/admin/logout">Sair</a>
@@ -854,6 +1040,7 @@ def admin_orders():
             <a href="/admin">Dashboard</a>
             <a href="/admin/orders">Pedidos</a>
             <a href="/admin/products">Produtos</a>
+            <a href="/admin/categories">Categorias</a>
             <a href="/admin/create-list">Nova Lista</a>
             <a href="/admin/reports">Relatórios</a>
             <a href="/admin/logout">Sair</a>
@@ -907,6 +1094,7 @@ def admin_order_detail(order_id):
             <a href="/admin">Dashboard</a>
             <a href="/admin/orders">Pedidos</a>
             <a href="/admin/products">Produtos</a>
+            <a href="/admin/categories">Categorias</a>
             <a href="/admin/create-list">Nova Lista</a>
             <a href="/admin/reports">Relatórios</a>
             <a href="/admin/logout">Sair</a>
@@ -1002,6 +1190,7 @@ def admin_products():
             <a href="/admin">Dashboard</a>
             <a href="/admin/orders">Pedidos</a>
             <a href="/admin/products">Produtos</a>
+            <a href="/admin/categories">Categorias</a>
             <a href="/admin/create-list">Nova Lista</a>
             <a href="/admin/reports">Relatórios</a>
             <a href="/admin/logout">Sair</a>
@@ -1243,6 +1432,7 @@ def admin_create_weekly_list():
             <a href="/admin">Dashboard</a>
             <a href="/admin/orders">Pedidos</a>
             <a href="/admin/products">Produtos</a>
+            <a href="/admin/categories">Categorias</a>
             <a href="/admin/create-list">Nova Lista</a>
             <a href="/admin/reports">Relatórios</a>
             <a href="/admin/logout">Sair</a>
@@ -1304,6 +1494,7 @@ def admin_reports():
                 <a href="/admin">Dashboard</a>
                 <a href="/admin/orders">Pedidos</a>
                 <a href="/admin/products">Produtos</a>
+                <a href="/admin/categories">Categorias</a>
                 <a href="/admin/create-list">Nova Lista</a>
                 <a href="/admin/reports">Relatórios</a>
                 <a href="/admin/logout">Sair</a>
@@ -1355,6 +1546,7 @@ def admin_reports():
             <a href="/admin">Dashboard</a>
             <a href="/admin/orders">Pedidos</a>
             <a href="/admin/products">Produtos</a>
+            <a href="/admin/categories">Categorias</a>
             <a href="/admin/create-list">Nova Lista</a>
             <a href="/admin/reports">Relatórios</a>
             <a href="/admin/logout">Sair</a>
@@ -1415,4 +1607,3 @@ else:
     # Para Railway (quando executado via gunicorn)
     with app.app_context():
         init_db()
-
